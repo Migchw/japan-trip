@@ -77,12 +77,15 @@ def load_places_from_csv(csv_path: str = CSV_PATH) -> list[dict]:
     return places
 
 def build_tsv(places: list[dict]):
-    header = "ลำดับ\tรูปภาพ (IMAGE)\tเมือง (City)\tย่าน (Area)\tชื่อร้าน / สถานที่\tประเภท\tอาหาร / จุดเด่น\tเวลาเปิด-ปิด\tเมนูเด็ด / ไฮไลต์\tโน้ตส่วนตัว\tGoogle Maps"
-    lines = [header]
+    header_img = "ลำดับ\tรูปภาพ (IMAGE)\tเมือง (City)\tย่าน (Area)\tชื่อร้าน / สถานที่\tประเภท\tอาหาร / จุดเด่น\tเวลาเปิด-ปิด\tเมนูเด็ด / ไฮไลต์\tโน้ตส่วนตัว\tGoogle Maps"
+    lines_img = [header_img]
+    header_plain = "ลำดับ\tเมือง\tย่าน\tชื่อร้าน / สถานที่\tประเภท\tอาหาร / จุดเด่น\tเวลาเปิด-ปิด\tเมนูเด็ด / ไฮไลต์\tโน้ตส่วนตัว\tลิงก์ Google Maps\tภาพหน้าปก"
+    lines_plain = [header_plain]
+    
     for p in places:
         img = f'=IMAGE("{p["cover"]}")' if p.get("cover") else ""
         link = f'=HYPERLINK("{p["maps_url"]}", "📍 แผนที่")' if p.get("maps_url") else ""
-        row = [
+        lines_img.append("\t".join([
             str(p["id"]),
             img,
             p["city"],
@@ -94,11 +97,26 @@ def build_tsv(places: list[dict]):
             p["signature"],
             p.get("note", ""),
             link
-        ]
-        lines.append("\t".join(row))
+        ]))
+        lines_plain.append("\t".join([
+            str(p["id"]),
+            p["city"],
+            p["area"],
+            p["name"],
+            p["type"],
+            p["cuisine"],
+            p["hours"],
+            p["signature"],
+            p.get("note", ""),
+            p.get("maps_url", ""),
+            p.get("cover", "")
+        ]))
+
     with open(TSV_IMG_PATH, 'w', encoding='utf-8', newline='') as f:
-        f.write("\n".join(lines) + "\n")
-    print(f"[OK] Generated {TSV_IMG_PATH} ({len(places)} items)")
+        f.write("\n".join(lines_img) + "\n")
+    with open(TSV_PLAIN_PATH, 'w', encoding='utf-8', newline='') as f:
+        f.write("\n".join(lines_plain) + "\n")
+    print(f"[OK] Generated {TSV_IMG_PATH} & {TSV_PLAIN_PATH} ({len(places)} items)")
 
 def sync_html_file(filepath: str, places: list[dict]):
     if not os.path.exists(filepath):
