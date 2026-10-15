@@ -129,10 +129,11 @@ def sync_html_file(filepath: str, places: list[dict]):
     for p in places:
         c = p["city"]
         city_counts[c] = city_counts.get(c, 0) + 1
+    total_photos = sum(len(p.get("photos", [])) for p in places)
 
     content = re.sub(
-        r'<title>🇯🇵 Japan Trip 2026 - รวมภาพรีวิวจริง \d+.*?</title>',
-        f'<title>🇯🇵 Japan Trip 2026 - รวมภาพรีวิวจริง {total_count} ร้านอาหาร & สถานที่ท่องเที่ยว</title>',
+        r'<title>.*?Japan Trip 2026.*?</title>',
+        f'<title>Japan Trip 2026 - รวมภาพรีวิวจริง {total_count} ร้านอาหาร & สถานที่ท่องเที่ยว</title>',
         content
     )
     content = re.sub(
@@ -140,7 +141,18 @@ def sync_html_file(filepath: str, places: list[dict]):
         f'คัดสรร {total_count} ร้านเด็ด',
         content
     )
+    content = re.sub(
+        r'รวมภาพถ่ายรีวิวจริงแท้ \d+ รูป',
+        f'รวมภาพถ่ายรีวิวจริงแท้ {total_photos} รูป',
+        content
+    )
     content = re.sub(r'ทั้งหมด \(\d+\)', f'ทั้งหมด ({total_count})', content)
+    content = re.sub(r'โตเกียว · Tokyo \(\d+\)', f'โตเกียว · Tokyo ({city_counts.get("Tokyo", 0)})', content)
+    content = re.sub(r'โอซาก้า · Osaka \(\d+\)', f'โอซาก้า · Osaka ({city_counts.get("Osaka", 0)})', content)
+    content = re.sub(r'เกียวโต · Kyoto \(\d+\)', f'เกียวโต · Kyoto ({city_counts.get("Kyoto", 0)})', content)
+    content = re.sub(r'ยามานาชิ · Yamanashi \(\d+\)', f'ยามานาชิ · Yamanashi ({city_counts.get("Yamanashi", 0)})', content)
+
+    # Legacy emoji chip matching fallback
     content = re.sub(r'🗼 โตเกียว \(\d+\)', f'🗼 โตเกียว ({city_counts.get("Tokyo", 0)})', content)
     content = re.sub(r'🐙 โอซาก้า \(\d+\)', f'🐙 โอซาก้า ({city_counts.get("Osaka", 0)})', content)
     content = re.sub(r'⛩️ เกียวโต \(\d+\)', f'⛩️ เกียวโต ({city_counts.get("Kyoto", 0)})', content)
